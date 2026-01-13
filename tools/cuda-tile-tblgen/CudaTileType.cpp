@@ -99,10 +99,13 @@ std::ostream &operator<<(std::ostream &os, CudaTileElementType elementType) {
   case kUnknown:
     os << "unknown";
     break;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcovered-switch-default"
   default:
     std::cout << static_cast<int>(elementType) << std::endl;
     llvm_unreachable("Invalid element type");
     break;
+#pragma clang diagnostic pop
   }
 
   return os;

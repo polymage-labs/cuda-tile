@@ -893,7 +893,7 @@ private:
         .Case([&](OpaqueLoc opaqueLoc) {
           getDebugInfoIndex(opaqueLoc.getFallbackLocation());
         })
-        .Default([&](Attribute) -> LogicalResult { return success(); });
+        .Default([&](Attribute) -> void {});
   }
 
   // di-compile-unit =:

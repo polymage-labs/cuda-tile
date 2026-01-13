@@ -118,8 +118,11 @@ TileIRType OperationParameter::getTypeDescription() const {
                     "processing: " +
                     this->opName + "." + this->name);
   }
+  #pragma clang diagnostic push
+  #pragma clang diagnostic ignored "-Wcovered-switch-default"
   default:
     llvm_unreachable("Invalid parameter type");
+  #pragma clang diagnostic pop
   }
 }
 
