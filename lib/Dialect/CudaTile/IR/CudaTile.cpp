@@ -2824,7 +2824,7 @@ struct CombineIfs : public OpRewritePattern<IfOp> {
     llvm::append_range(mergedTypes, nextIf.getResultTypes());
 
     IfOp combinedIf = IfOp::create(rewriter, nextIf.getLoc(), mergedTypes,
-                                            prevIf.getCondition());
+                                   prevIf.getCondition());
 
     rewriter.inlineRegionBefore(prevIf.getThenRegion(),
                                 combinedIf.getThenRegion(),
@@ -2999,7 +2999,7 @@ struct CombineNestedIfs : public OpRewritePattern<IfOp> {
 
     Location loc = op.getLoc();
     Value newCondition = AndIOp::create(rewriter, loc, op.getCondition(),
-                                                 nestedIf.getCondition());
+                                        nestedIf.getCondition());
     auto newIf = IfOp::create(rewriter, loc, op.getResultTypes(), newCondition);
     Block *newIfBlock = rewriter.createBlock(&newIf.getThenRegion());
 
@@ -3009,7 +3009,7 @@ struct CombineNestedIfs : public OpRewritePattern<IfOp> {
 
     for (auto idx : elseYieldsToUpgradeToSelect)
       results[idx] = SelectOp::create(rewriter, op.getLoc(), op.getCondition(),
-                                               thenYield[idx], elseYield[idx]);
+                                      thenYield[idx], elseYield[idx]);
 
     rewriter.mergeBlocks(nestedIf.getThenBlock(), newIfBlock);
     rewriter.setInsertionPointToEnd(newIf.getThenBlock());
@@ -3041,7 +3041,7 @@ struct MoveTerminatorToParent : public OpRewritePattern<IfOp> {
       return failure();
 
     auto newIfOp = IfOp::create(rewriter, op.getLoc(), SmallVector<Type>(),
-                                         op.getCondition());
+                                op.getCondition());
     rewriter.inlineRegionBefore(op.getThenRegion(), newIfOp.getThenRegion(),
                                 newIfOp.getThenRegion().begin());
 
@@ -4206,8 +4206,8 @@ struct CudaTileinlinerInterface : public DialectInlinerInterface {
     // update the original return to use the loops results.
     builder.setInsertionPointToStart(&block);
     auto loopOp = LoopOp::create(builder, block.front().getLoc(),
-                                         returnOp->getOperandTypes(),
-                                         /*operands=*/ValueRange());
+                                 returnOp->getOperandTypes(),
+                                 /*operands=*/ValueRange());
     returnOp->setOperands(loopOp.getResults());
     returnOp->moveAfter(loopOp);
 
