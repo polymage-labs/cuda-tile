@@ -1077,7 +1077,7 @@ struct FunctionTableWriter {
           }
 
           if (auto intOrFPAttr =
-                  dyn_cast<DenseTypedElementsAttr>(denseAttr)) {
+                  dyn_cast<DenseIntOrFPElementsAttr>(denseAttr)) {
             uint64_t constantIndex;
             if (failed(constMgr.addConstant(intOrFPAttr, constantIndex)))
               return op->emitError("failed to add constant attribute '")
@@ -1491,7 +1491,7 @@ writeGlobalSection(raw_ostream &stream, cuda_tile::ModuleOp module,
     sectionWriter.writeVarInt(strMgr.getStringIndex(globalOp.getSymName()));
 
     // 2. Write type index of the global's value.
-    DenseTypedElementsAttr valueAttr = globalOp.getValue();
+    DenseIntOrFPElementsAttr valueAttr = globalOp.getValue();
     sectionWriter.writeVarInt(typeMgr.getTypeIndex(valueAttr.getType()));
 
     // 3. Write constant index for the global's value.

@@ -272,7 +272,7 @@ void cuda_tile::printFunctionSignatureWithCudaTileTypes(OpAsmPrinter &printer,
 }
 
 //===----------------------------------------------------------------------===//
-// Custom DenseTypedElementsAttr Parsing
+// Custom DenseIntOrFPElementsAttr Parsing
 //===----------------------------------------------------------------------===//
 
 // TODO: Leverage upstream changes to strip !cuda_tile. prefix.
@@ -324,8 +324,8 @@ static bool isValidDenseElementType(Type elementType) {
 }
 
 // Parse format: constant <f32: 0x7F800000> : tile<f32>
-static ParseResult parseDenseTypedElementsAttr(OpAsmParser &parser,
-                                                 DenseTypedElementsAttr &attr,
+static ParseResult parseDenseIntOrFPElementsAttr(OpAsmParser &parser,
+                                                 DenseIntOrFPElementsAttr &attr,
                                                  Type &resultType) {
   if (parser.parseLess())
     return failure();
@@ -561,28 +561,28 @@ static ParseResult parseDenseTypedElementsAttr(OpAsmParser &parser,
       SmallVector<bool> boolValues;
       for (int64_t val : integerValues)
         boolValues.push_back(val != 0);
-      attr = llvm::cast<DenseTypedElementsAttr>(
+      attr = llvm::cast<DenseIntOrFPElementsAttr>(
           DenseElementsAttr::get(tileType, ArrayRef<bool>(boolValues)));
     } else if (elementType.isInteger(8)) {
       SmallVector<int8_t> i8Values;
       for (int64_t val : integerValues)
         i8Values.push_back(static_cast<int8_t>(val));
-      attr = llvm::cast<DenseTypedElementsAttr>(
+      attr = llvm::cast<DenseIntOrFPElementsAttr>(
           DenseElementsAttr::get(tileType, ArrayRef<int8_t>(i8Values)));
     } else if (elementType.isInteger(16)) {
       SmallVector<int16_t> i16Values;
       for (int64_t val : integerValues)
         i16Values.push_back(static_cast<int16_t>(val));
-      attr = llvm::cast<DenseTypedElementsAttr>(
+      attr = llvm::cast<DenseIntOrFPElementsAttr>(
           DenseElementsAttr::get(tileType, ArrayRef<int16_t>(i16Values)));
     } else if (elementType.isInteger(32)) {
       SmallVector<int32_t> i32Values;
       for (int64_t val : integerValues)
         i32Values.push_back(static_cast<int32_t>(val));
-      attr = llvm::cast<DenseTypedElementsAttr>(
+      attr = llvm::cast<DenseIntOrFPElementsAttr>(
           DenseElementsAttr::get(tileType, ArrayRef<int32_t>(i32Values)));
     } else if (elementType.isInteger(64)) {
-      attr = llvm::cast<DenseTypedElementsAttr>(
+      attr = llvm::cast<DenseIntOrFPElementsAttr>(
           DenseElementsAttr::get(tileType, ArrayRef<int64_t>(integerValues)));
     } else {
       return parser.emitError(parser.getCurrentLocation(),
@@ -590,15 +590,15 @@ static ParseResult parseDenseTypedElementsAttr(OpAsmParser &parser,
     }
   } else { // Handle floating point numerical values.
     assert(isa_and_nonnull<FloatType>(elementType) && "expect a float type");
-    attr = llvm::cast<DenseTypedElementsAttr>(
+    attr = llvm::cast<DenseIntOrFPElementsAttr>(
         DenseElementsAttr::get(tileType, ArrayRef<APFloat>(floatValues)));
   }
   return success();
 }
 
 // constant <f32: 42.0> : tile<f32>
-static void printDenseTypedElementsAttr(OpAsmPrinter &p, Operation *op,
-                                          DenseTypedElementsAttr attr,
+static void printDenseIntOrFPElementsAttr(OpAsmPrinter &p, Operation *op,
+                                          DenseIntOrFPElementsAttr attr,
                                           Type resultType) {
   // Print the dense values part (everything before the colon)
   std::string attrStr;
@@ -627,16 +627,16 @@ static void printDenseTypedElementsAttr(OpAsmPrinter &p, Operation *op,
 }
 
 static ParseResult
-parseDenseTypedElementsAttrNoResult(OpAsmParser &parser,
-                                      DenseTypedElementsAttr &attr) {
+parseDenseIntOrFPElementsAttrNoResult(OpAsmParser &parser,
+                                      DenseIntOrFPElementsAttr &attr) {
   Type resultType;
-  return parseDenseTypedElementsAttr(parser, attr, resultType);
+  return parseDenseIntOrFPElementsAttr(parser, attr, resultType);
 }
 
 static void
-printDenseTypedElementsAttrNoResult(OpAsmPrinter &p, Operation *op,
-                                      DenseTypedElementsAttr attr) {
-  printDenseTypedElementsAttr(p, op, attr, attr.getType());
+printDenseIntOrFPElementsAttrNoResult(OpAsmPrinter &p, Operation *op,
+                                      DenseIntOrFPElementsAttr attr) {
+  printDenseIntOrFPElementsAttr(p, op, attr, attr.getType());
 }
 
 //===----------------------------------------------------------------------===//
@@ -1272,7 +1272,7 @@ static std::optional<bool> getConstantBoolValue(Value value) {
   auto intType = llvm::dyn_cast<IntegerType>(type);
   if (!intType || intType.getWidth() != 1)
     return std::nullopt;
-  DenseTypedElementsAttr cstAttr = cond.getValue();
+  DenseIntOrFPElementsAttr cstAttr = cond.getValue();
   if (cstAttr.isSplat() || cstAttr.size() == 1)
     return *cstAttr.getValues<bool>().begin();
   return std::nullopt;
@@ -1296,7 +1296,7 @@ static bool isConstantOnesValue(mlir::Value value) {
   auto intType = llvm::dyn_cast<IntegerType>(type);
   if (!intType)
     return false;
-  DenseTypedElementsAttr cstAttr = constVal.getValue();
+  DenseIntOrFPElementsAttr cstAttr = constVal.getValue();
   if (cstAttr.isSplat() || cstAttr.size() == 1)
     return (*cstAttr.getValues<APInt>().begin() == 1);
   return false;
@@ -1310,7 +1310,7 @@ static bool isConstantZeroValue(mlir::Value value) {
   auto intType = llvm::dyn_cast<IntegerType>(type);
   if (!intType)
     return false;
-  DenseTypedElementsAttr cstAttr = constVal.getValue();
+  DenseIntOrFPElementsAttr cstAttr = constVal.getValue();
   if (cstAttr.isSplat() || cstAttr.size() == 1)
     return (*cstAttr.getValues<APInt>().begin() == 0);
   return false;
@@ -1629,7 +1629,7 @@ OpFoldResult ConstantOp::fold(FoldAdaptor adaptor) { return getValue(); }
 
 void ConstantOp::getAsmResultNames(OpAsmSetValueNameFn setNameFn) {
   Type type = getType().getElementType();
-  DenseTypedElementsAttr cstAttr = getValue();
+  DenseIntOrFPElementsAttr cstAttr = getValue();
   auto intType = llvm::dyn_cast<IntegerType>(type);
 
   // Sugar i1 constants with 'true' and 'false'.

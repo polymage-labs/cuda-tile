@@ -390,7 +390,7 @@ TileIRType convertAttributeDef(const std::string &opName,
     return TileIRType::attribute(opName, "PaddingValue");
   } else if (attrName == "CudaTile_DivRoundingModeAttr") {
     return TileIRType::attribute(opName, "DivRoundingMode");
-  } else if (attrName == "Builtin_DenseTypedElementsAttr") {
+  } else if (attrName == "Builtin_DenseIntOrFPElementsAttr") {
     return TileIRType::builtin("DenseConstant");
   } else if (attrName == "DenseBoolArrayAttr") {
     return TileIRType::builtin("DenseBoolArray");

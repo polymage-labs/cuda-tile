@@ -731,7 +731,8 @@ public:
     ArrayRef<char> rawData(reinterpret_cast<const char *>(rawUint8Data.data()),
                            rawUint8Data.size());
     // Validate the buffer size and format.
-    if (!DenseElementsAttr::isValidRawBuffer(tileType, rawData))
+    bool isSplat = false;
+    if (!DenseElementsAttr::isValidRawBuffer(tileType, rawData, isSplat))
       return reader.emitError() << "failed to validate buffer size and format";
 
     DenseElementsAttr attr = nullptr;
@@ -740,7 +741,7 @@ public:
       // Convert endianess.
       SmallVector<char, 64> outDataVec(rawData.size());
       MutableArrayRef<char> convRawData(outDataVec);
-      DenseTypedElementsAttr::convertEndianOfArrayRefForBEmachine(
+      DenseIntOrFPElementsAttr::convertEndianOfArrayRefForBEmachine(
           rawData, convRawData, tileType);
       attr = DenseElementsAttr::getFromRawBuffer(tileType, convRawData);
     } else {
@@ -1624,7 +1625,7 @@ class InstructionParser {
                                        "self-contained DenseElementsAttr";
       }
 
-      if (std::is_same_v<T, DenseTypedElementsAttr>) {
+      if (std::is_same_v<T, DenseIntOrFPElementsAttr>) {
         if (failed(parseConstantAttrIndex(reader, context, expectedType,
                                           constants, constCache, parsedAttr)))
           return failure();
@@ -2330,11 +2331,11 @@ createGlobal(const GlobalInfo &globalInfo, OpBuilder &builder,
   if (failed(valueAttr))
     return failure();
 
-  auto denseValueAttr = dyn_cast<DenseTypedElementsAttr>(*valueAttr);
+  auto denseValueAttr = dyn_cast<DenseIntOrFPElementsAttr>(*valueAttr);
   if (!denseValueAttr)
     return reader.emitError()
            << "parsed global constant attribute is not the expected type "
-              "derived from DenseTypedElementsAttr";
+              "derived from DenseIntOrFPElementsAttr";
 
   // Global variables must not have DILocAttr location type because CudaTile
   // supports only local scope. Therefore, global variables must have UnknownLoc
