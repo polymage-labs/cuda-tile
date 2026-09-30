@@ -253,7 +253,7 @@ static inline bool isConstOne(ConstantOp op) {
   auto intType = llvm::dyn_cast<IntegerType>(type);
   if (!intType)
     return false;
-  DenseTypedElementsAttr cstAttr = op.getValue();
+  DenseIntOrFPElementsAttr cstAttr = op.getValue();
   if (cstAttr.size() != 1)
     return false;
   auto intData = cstAttr.tryGetValues<APInt>();

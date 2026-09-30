@@ -67,7 +67,6 @@ def CudaTile_Float8E4M3FN : CudaTileTypeAlias<F8E4M3FN, "13.1", "f8E4M3FN">;
 def CudaTile_Float8E5M2   : CudaTileTypeAlias<F8E5M2, "13.1", "f8E5M2">;
 def CudaTile_Float8E8M0FNU : CudaTileTypeAlias<F8E8M0FNU, "13.2", "f8E8M0FNU">;
 def CudaTile_Float4E2M1FN : CudaTileTypeAlias<F4E2M1FN, "13.3", "f4E2M1FN">;
-def CudaTile_Float8E5M3FNU : CudaTileTypeAlias<F8E5M3FNU, "13.4", "f8E5M3FNU">;
 def CudaTile_AnyFloat : AnyTypeOf<[CudaTile_Float16,
                                    CudaTile_BFloat16,
                                    CudaTile_Float32,
@@ -77,7 +76,6 @@ def CudaTile_AnyFloat : AnyTypeOf<[CudaTile_Float16,
                                    CudaTile_Float8E5M2,
                                    CudaTile_Float8E8M0FNU,
                                    CudaTile_Float4E2M1FN,
-                                   CudaTile_Float8E5M3FNU,
                                   ]> {
   let cppFunctionName = "isAnyFloat";
 }
@@ -960,16 +958,14 @@ def CudaTile_BaseFloatTileType : CudaTile_TileOf<[
 def CudaTile_FloatTileType : CudaTile_TileOf<[
   CudaTile_Float16, CudaTile_BFloat16, CudaTile_Float32, CudaTile_Float64,
   CudaTile_TFloat32, CudaTile_Float8E4M3FN, CudaTile_Float8E5M2,
-  CudaTile_Float8E8M0FNU, CudaTile_Float4E2M1FN,
-  CudaTile_Float8E5M3FNU
+  CudaTile_Float8E8M0FNU, CudaTile_Float4E2M1FN
 ]>;
 
 def CudaTile_NumberTileType : CudaTile_TileOf<[
   CudaTile_Int1, CudaTile_Int8, CudaTile_Int16, CudaTile_Int32, CudaTile_Int64,
   CudaTile_Float16, CudaTile_BFloat16, CudaTile_Float32, CudaTile_Float64,
   CudaTile_TFloat32, CudaTile_Float8E4M3FN, CudaTile_Float8E5M2,
-  CudaTile_Float8E8M0FNU, CudaTile_Float4E2M1FN,
-  CudaTile_Float8E5M3FNU
+  CudaTile_Float8E8M0FNU, CudaTile_Float4E2M1FN
 ]>;
 
 def CudaTile_PointerTileType : CudaTile_TileOf<[CudaTile_PointerType]>;

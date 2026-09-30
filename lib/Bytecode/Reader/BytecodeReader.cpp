@@ -779,7 +779,7 @@ static LogicalResult parseTypeSection(ArrayRef<uint8_t> payload,
 //        f16, f8E4M3FN, f8E5M2, tf32, f32, f64), including the splat-vs-
 //        bit-packed convention. The i1 splat byte is normalized below for
 //        backward compatibility with the legacy 0xff encoding.
-//     2. DenseTypedElementsAttr::convertEndianOfArrayRefForBEmachine():
+//     2. DenseIntOrFPElementsAttr::convertEndianOfArrayRefForBEmachine():
 //        the BE byte-swap layout used on big-endian hosts.
 //     3. APInt::getRawData() (writer side, in writeAPInt): word-size and
 //        intra-word endianness for integers > 64 bits.
@@ -872,7 +872,8 @@ public:
       attr = DenseElementsAttr::get(tileType, ArrayRef<bool>(values));
     } else {
       // Non-i1: ride MLIR's raw buffer contract directly.
-      if (!DenseElementsAttr::isValidRawBuffer(tileType, rawData)) {
+      bool isSplat = false;
+      if (!DenseElementsAttr::isValidRawBuffer(tileType, rawData, isSplat)) {
         return reader.emitError()
                << "failed to validate buffer size and format";
       }
@@ -880,7 +881,7 @@ public:
       if (llvm::endianness::native == llvm::endianness::big) {
         SmallVector<char, 64> outDataVec(rawData.size());
         MutableArrayRef<char> convRawData(outDataVec);
-        DenseTypedElementsAttr::convertEndianOfArrayRefForBEmachine(
+        DenseIntOrFPElementsAttr::convertEndianOfArrayRefForBEmachine(
             rawData, convRawData, tileType);
         attr = DenseElementsAttr::getFromRawBuffer(tileType, convRawData);
       } else {
@@ -1888,7 +1889,7 @@ class InstructionParser {
         }
       }
 
-      if (std::is_same_v<T, DenseTypedElementsAttr>) {
+      if (std::is_same_v<T, DenseIntOrFPElementsAttr>) {
         if (failed(parseConstantAttrIndex(reader, context, expectedType,
                                           constants, constCache, parsedAttr))) {
           return failure();
@@ -2758,11 +2759,11 @@ createGlobal(const GlobalInfo &globalInfo, OpBuilder &builder,
     return failure();
   }
 
-  auto denseValueAttr = dyn_cast<DenseTypedElementsAttr>(*valueAttr);
+  auto denseValueAttr = dyn_cast<DenseIntOrFPElementsAttr>(*valueAttr);
   if (!denseValueAttr) {
     return reader.emitError()
            << "parsed global constant attribute is not the expected type "
-              "derived from DenseTypedElementsAttr";
+              "derived from DenseIntOrFPElementsAttr";
   }
 
   // Global variables must not have DILocAttr location type because CudaTile

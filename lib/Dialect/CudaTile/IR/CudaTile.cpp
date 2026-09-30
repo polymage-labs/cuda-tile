@@ -328,7 +328,7 @@ void cuda_tile::printFunctionSignatureWithCudaTileTypes(OpAsmPrinter &printer,
 }
 
 //===----------------------------------------------------------------------===//
-// Custom DenseTypedElementsAttr Parsing
+// Custom DenseIntOrFPElementsAttr Parsing
 //===----------------------------------------------------------------------===//
 
 // TODO: Leverage upstream changes to strip !cuda_tile. prefix.
@@ -373,13 +373,12 @@ static bool isValidDenseElementType(Type elementType) {
          isa<Float8E4M3FNType>(elementType) ||  // f8E4M3FN
          isa<Float8E5M2Type>(elementType) ||    // f8E5M2
          isa<Float8E8M0FNUType>(elementType) || // f8E8M0FNU
-         isa<Float8E5M3FNUType>(elementType) || // f8E5M3FNU
          isa<Float4E2M1FNType>(elementType);    // f4E2M1FN
 }
 
 // Parse format: constant <f32: 0x7F800000> : tile<f32>
-static ParseResult parseDenseTypedElementsAttr(OpAsmParser &parser,
-                                               DenseTypedElementsAttr &attr,
+static ParseResult parseDenseIntOrFPElementsAttr(OpAsmParser &parser,
+                                               DenseIntOrFPElementsAttr &attr,
                                                Type &resultType) {
   if (parser.parseLess())
     return failure();
@@ -392,7 +391,6 @@ static ParseResult parseDenseTypedElementsAttr(OpAsmParser &parser,
               "or f16 "
               "or bf16 or f32 or f64 or tf32 or f8E4M3FN or f8E5M2 or "
               "f8E8M0FNU or f4E2M1FN"
-              " or f8E5M3FNU"
               " values, but got "
            << prefixElementType;
 
@@ -403,7 +401,6 @@ static ParseResult parseDenseTypedElementsAttr(OpAsmParser &parser,
               "or f16 "
               "or bf16 or f32 or f64 or tf32 or f8E4M3FN or f8E5M2 or "
               "f8E8M0FNU or f4E2M1FN"
-              " or f8E5M3FNU"
               " values, but got "
            << prefixElementType;
   }
@@ -618,28 +615,28 @@ static ParseResult parseDenseTypedElementsAttr(OpAsmParser &parser,
       SmallVector<bool> boolValues;
       for (int64_t val : integerValues)
         boolValues.push_back(val != 0);
-      attr = llvm::cast<DenseTypedElementsAttr>(
+      attr = llvm::cast<DenseIntOrFPElementsAttr>(
           DenseElementsAttr::get(tileType, ArrayRef<bool>(boolValues)));
     } else if (elementType.isInteger(8)) {
       SmallVector<int8_t> i8Values;
       for (int64_t val : integerValues)
         i8Values.push_back(static_cast<int8_t>(val));
-      attr = llvm::cast<DenseTypedElementsAttr>(
+      attr = llvm::cast<DenseIntOrFPElementsAttr>(
           DenseElementsAttr::get(tileType, ArrayRef<int8_t>(i8Values)));
     } else if (elementType.isInteger(16)) {
       SmallVector<int16_t> i16Values;
       for (int64_t val : integerValues)
         i16Values.push_back(static_cast<int16_t>(val));
-      attr = llvm::cast<DenseTypedElementsAttr>(
+      attr = llvm::cast<DenseIntOrFPElementsAttr>(
           DenseElementsAttr::get(tileType, ArrayRef<int16_t>(i16Values)));
     } else if (elementType.isInteger(32)) {
       SmallVector<int32_t> i32Values;
       for (int64_t val : integerValues)
         i32Values.push_back(static_cast<int32_t>(val));
-      attr = llvm::cast<DenseTypedElementsAttr>(
+      attr = llvm::cast<DenseIntOrFPElementsAttr>(
           DenseElementsAttr::get(tileType, ArrayRef<int32_t>(i32Values)));
     } else if (elementType.isInteger(64)) {
-      attr = llvm::cast<DenseTypedElementsAttr>(
+      attr = llvm::cast<DenseIntOrFPElementsAttr>(
           DenseElementsAttr::get(tileType, ArrayRef<int64_t>(integerValues)));
     } else {
       return parser.emitError(parser.getCurrentLocation(),
@@ -647,15 +644,15 @@ static ParseResult parseDenseTypedElementsAttr(OpAsmParser &parser,
     }
   } else { // Handle floating point numerical values.
     assert(isa_and_nonnull<FloatType>(elementType) && "expect a float type");
-    attr = llvm::cast<DenseTypedElementsAttr>(
+    attr = llvm::cast<DenseIntOrFPElementsAttr>(
         DenseElementsAttr::get(tileType, ArrayRef<APFloat>(floatValues)));
   }
   return success();
 }
 
 // constant <f32: 42.0> : tile<f32>
-static void printDenseTypedElementsAttr(OpAsmPrinter &p, Operation *op,
-                                        DenseTypedElementsAttr attr,
+static void printDenseIntOrFPElementsAttr(OpAsmPrinter &p, Operation *op,
+                                        DenseIntOrFPElementsAttr attr,
                                         Type resultType) {
   // Print the dense values part (everything before the colon)
   std::string attrStr;
@@ -684,15 +681,15 @@ static void printDenseTypedElementsAttr(OpAsmPrinter &p, Operation *op,
 }
 
 static ParseResult
-parseDenseTypedElementsAttrNoResult(OpAsmParser &parser,
-                                    DenseTypedElementsAttr &attr) {
+parseDenseIntOrFPElementsAttrNoResult(OpAsmParser &parser,
+                                    DenseIntOrFPElementsAttr &attr) {
   Type resultType;
-  return parseDenseTypedElementsAttr(parser, attr, resultType);
+  return parseDenseIntOrFPElementsAttr(parser, attr, resultType);
 }
 
-static void printDenseTypedElementsAttrNoResult(OpAsmPrinter &p, Operation *op,
-                                                DenseTypedElementsAttr attr) {
-  printDenseTypedElementsAttr(p, op, attr, attr.getType());
+static void printDenseIntOrFPElementsAttrNoResult(OpAsmPrinter &p, Operation *op,
+                                                DenseIntOrFPElementsAttr attr) {
+  printDenseIntOrFPElementsAttr(p, op, attr, attr.getType());
 }
 
 //===----------------------------------------------------------------------===//
@@ -1435,7 +1432,7 @@ static std::optional<bool> getConstantBoolValue(Value value) {
   auto intType = llvm::dyn_cast<IntegerType>(type);
   if (!intType || intType.getWidth() != 1)
     return std::nullopt;
-  DenseTypedElementsAttr cstAttr = cond.getValue();
+  DenseIntOrFPElementsAttr cstAttr = cond.getValue();
   if (cstAttr.isSplat() || cstAttr.size() == 1)
     return *cstAttr.getValues<bool>().begin();
   return std::nullopt;
@@ -1461,7 +1458,7 @@ isConstantIntMatching(Value value,
   auto intType = dyn_cast<IntegerType>(constVal.getType().getElementType());
   if (!intType)
     return false;
-  DenseTypedElementsAttr cstAttr = constVal.getValue();
+  DenseIntOrFPElementsAttr cstAttr = constVal.getValue();
   if (cstAttr.isSplat()) {
     return pred(cstAttr.getSplatValue<APInt>());
   }
@@ -1890,7 +1887,7 @@ OpFoldResult ConstantOp::fold(FoldAdaptor adaptor) { return getValue(); }
 
 void ConstantOp::getAsmResultNames(OpAsmSetValueNameFn setNameFn) {
   Type type = getType().getElementType();
-  DenseTypedElementsAttr cstAttr = getValue();
+  DenseIntOrFPElementsAttr cstAttr = getValue();
   auto intType = llvm::dyn_cast<IntegerType>(type);
 
   // Sugar i1 constants with 'true' and 'false'.
@@ -2577,16 +2574,6 @@ LogicalResult MmaFScaledOp::verify() {
   }
 
   // Check element types.
-  if (isa<Float8E5M3FNUType>(lhsScaleType.getElementType())) {
-    if (!isa<Float4E2M1FNType>(lhsType.getElementType())) {
-      return emitOpError(
-                 "unsupported combination of element types. Scale type ")
-             << lhsScaleType.getElementType()
-             << " expects lhs and rhs element types to be "
-             << Float4E2M1FNType::get(getContext()) << ", but got "
-             << lhsType.getElementType();
-    }
-  }
   if (isa<Float8E4M3FNType>(lhsScaleType.getElementType())) {
     if (!isa<Float4E2M1FNType>(lhsType.getElementType()))
       return emitOpError(
@@ -2650,16 +2637,6 @@ LogicalResult MmaFScaledOp::verify() {
                   "requires block scale factor of lhs_scale and rhs_scale "
                   "to be 16 or 32, but got "
                 << lhsScaleVecSize;
-      }
-    }
-    // F4 with UE5M3 scales can have vecSize=16 or 32 on SM107.
-    if (isa<Float8E5M3FNUType>(lhsScaleType.getElementType())) {
-      if (lhsScaleVecSize != 16 && lhsScaleVecSize != 32) {
-        return emitOpError()
-               << "shape error: f4E2M1FN element type with f8E5M3FNU scales "
-                  "requires block scale factor of lhs_scale and rhs_scale "
-                  "to be 16 or 32, but got "
-               << lhsScaleVecSize;
       }
     }
   }

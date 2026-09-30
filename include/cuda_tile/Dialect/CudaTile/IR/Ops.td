@@ -1203,10 +1203,10 @@ def CudaTile_ConstantOp : CudaTileCoreOpDef<"constant", "13.1",
     The annotated type of the tile constrains its rank, shape, and element type.
   }];
 
-  let arguments = (ins CudaTileArg<Builtin_DenseTypedElementsAttr, "The constant value to create.", "13.1">:$value);
+  let arguments = (ins CudaTileArg<Builtin_DenseIntOrFPElementsAttr, "The constant value to create.", "13.1">:$value);
   let results = (outs CudaTileArg<CudaTile_NumberTileType, "The constant tile.", "13.1">:$result);
   let hasFolder = 1;
-  let assemblyFormat = [{ custom<DenseTypedElementsAttr>($value, type($result)) attr-dict }];
+  let assemblyFormat = [{ custom<DenseIntOrFPElementsAttr>($value, type($result)) attr-dict }];
 
   let mlirExamples = [[{
     # cuda_tile.module @module {
@@ -1581,8 +1581,7 @@ def MmaFScaledOp_OperandTileType : CudaTile_TileOf<[CudaTile_Float8E4M3FN,
                                                     [CudaTile_IsTileTypePred],
                                                     "mmaf_scaled operand tile type">;
 def MmaFScaledOp_ScaleTileType : CudaTile_TileOf<[CudaTile_Float8E4M3FN,
-                                                  CudaTile_Float8E8M0FNU,
-                                                  CudaTile_Float8E5M3FNU
+                                                  CudaTile_Float8E8M0FNU
                                                   ],
                                                   [CudaTile_IsTileTypePred],
                                                    "mmaf_scaled scale tile type">;
@@ -1635,7 +1634,6 @@ def CudaTile_MmaFScaledOp : CudaTileFloatingPointOpDef<"mmaf_scaled", "13.3",
        [
         TableRow<["f8E4M3FN, f8E5M2, f4E2M1FN", "f8E8M0FNU", "f32"]>,
         TableRow<["f4E2M1FN", "f8E4M3FN", "f32"]>,
-        TableRow<["f4E2M1FN", "f8E5M3FNU", "f32"]>,
        ]
     >
   ];
@@ -2516,12 +2514,12 @@ def CudaTile_GlobalOp : CudaTileCoreOpDef<"global", "13.1", [Symbol]> {
   }]];
 
   let arguments = (ins CudaTileArg<SymbolNameAttr, "The name of the global variable.", "13.1">:$sym_name,
-                       CudaTileArg<Builtin_DenseTypedElementsAttr, "The value to initialize the allocation with.", "13.1">:$value,
+                       CudaTileArg<Builtin_DenseIntOrFPElementsAttr, "The value to initialize the allocation with.", "13.1">:$value,
                        CudaTileArg<DefaultValuedAttr<I64Attr, "0">, "The alignment of the buffer.", "13.1">:$alignment,
                        CudaTileArg<UnitAttr, "Whether the global is constant / read-only.", "13.3">:$constant,
                        CudaTileArg<DefaultValuedAttr<CudaTile_SymbolVisibilityAttr, "::mlir::cuda_tile::SymbolVisibility::Public">, "The symbol visibility of the global.", "13.3">:$symbol_visibility);
 
-  let assemblyFormat = "custom<SymbolVisibility>($symbol_visibility) (`constant` $constant^)? $sym_name (`alignment` `=` $alignment^)? attr-dict custom<DenseTypedElementsAttrNoResult>($value)";
+  let assemblyFormat = "custom<SymbolVisibility>($symbol_visibility) (`constant` $constant^)? $sym_name (`alignment` `=` $alignment^)? attr-dict custom<DenseIntOrFPElementsAttrNoResult>($value)";
   let hasVerifier = 1;
 }
 

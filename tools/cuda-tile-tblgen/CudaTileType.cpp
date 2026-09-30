@@ -70,7 +70,6 @@ std::vector<CudaTileElementType> allElementTypes() {
       kI1,     kI4,        kI8,  kI16,  kI32,  kI64, kF4E2M1FN, kF8E4M3FN,
       kF8E5M2, kF8E8M0FNU, kF16, kBF16, kTF32, kF32, kF64,
   };
-  types.push_back(kF8E5M3FNU);
   return types;
 }
 
@@ -168,7 +167,6 @@ TileIRType TileIRType::float_tile() {
   types.emplace_back(std::make_shared<ElementType>(kF8E5M2));
   types.emplace_back(std::make_shared<ElementType>(kF8E8M0FNU));
   types.emplace_back(std::make_shared<ElementType>(kF4E2M1FN));
-  types.emplace_back(std::make_shared<ElementType>(kF8E5M3FNU));
   types.emplace_back(std::make_shared<ElementType>(kTF32));
 
   return TileIRType(std::make_shared<TileType>(types));
@@ -432,7 +430,7 @@ TileIRType convertAttributeDef(const std::string &opName,
     return TileIRType::attribute(opName, "DivRoundingMode");
   } else if (attrName == "CudaTile_SymbolVisibilityAttr") {
     return TileIRType::attribute(opName, "SymbolVisibility");
-  } else if (attrName == "Builtin_DenseTypedElementsAttr") {
+  } else if (attrName == "Builtin_DenseIntOrFPElementsAttr") {
     return TileIRType::builtin("DenseConstant");
   } else if (attrName == "DenseBoolArrayAttr") {
     return TileIRType::builtin("DenseBoolArray");

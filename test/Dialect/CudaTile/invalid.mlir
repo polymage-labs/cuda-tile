@@ -668,7 +668,7 @@ cuda_tile.module @kernels {
 // Test mmaf_scaled with unsupported f32 scale type
 cuda_tile.module @kernels {
   testing$func @mmaf_scaled_unsupported_f32_scale(%arg0: !cuda_tile.tile<128x128xf4E2M1FN>, %arg1: !cuda_tile.tile<128x128xf4E2M1FN>, %arg2: !cuda_tile.tile<128x128xf32>, %arg3: !cuda_tile.tile<128x4xf32>, %arg4: !cuda_tile.tile<4x128xf32>) {
-    // expected-error @below {{op operand #3 must be mmaf_scaled scale tile type of f8E4M3FN or f8E8M0FNU or f8E5M3FNU values, but got '!cuda_tile.tile<128x4xf32>'}}
+    // expected-error @below {{op operand #3 must be mmaf_scaled scale tile type of f8E4M3FN or f8E8M0FNU values, but got '!cuda_tile.tile<128x4xf32>'}}
     %0 = cuda_tile.mmaf_scaled %arg0, %arg1, %arg2, %arg3, %arg4 : !cuda_tile.tile<128x128xf4E2M1FN>, !cuda_tile.tile<128x128xf4E2M1FN>, !cuda_tile.tile<128x128xf32>, !cuda_tile.tile<128x4xf32>, !cuda_tile.tile<4x128xf32>
   }
 }
