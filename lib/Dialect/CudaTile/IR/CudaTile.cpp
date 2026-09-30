@@ -3042,7 +3042,7 @@ LogicalResult FToFOp::verify() {
 ParseResult EntryOp::parse(OpAsmParser &parser, OperationState &result) {
   // Parse the name as a symbol.
   StringAttr nameAttr;
-  if (parser.parseSymbolName(nameAttr, getSymNameAttrName(result.name),
+  if (parser.parseSymbolName(nameAttr, SymbolTable::getSymbolAttrName(),
                              result.attributes))
     return failure();
 
@@ -3115,7 +3115,10 @@ ParseResult EntryOp::parse(OpAsmParser &parser, OperationState &result) {
 
 void EntryOp::print(OpAsmPrinter &printer) {
   // Print the operation and the function name.
-  auto funcName = getSymName();
+  auto funcName =
+      getOperation()
+          ->getAttrOfType<StringAttr>(SymbolTable::getSymbolAttrName())
+          .getValue();
   printer << ' ';
   printer.printSymbolName(funcName);
   auto fnType = getFunctionType();
@@ -3132,7 +3135,7 @@ void EntryOp::print(OpAsmPrinter &printer) {
   printer.printOptionalAttrDict(
       getOperation()->getAttrs(),
       {getArgAttrsAttrName(), getFunctionTypeAttrName(),
-       getSymNameAttrName(), getResAttrsAttrName(),
+       SymbolTable::getSymbolAttrName(), getResAttrsAttrName(),
        kOptimizationHintsAttr});
 }
 
